@@ -33,7 +33,7 @@ func sendNoEnoughNodesRequest(t *testing.T) {
 		"roles":               []string{"virtual"},
 		"host":                TESTHOST,
 		"public_key":          TESTPUBLICKEY,
-		"bootstrap_nodes_num": 5,
+		"num_bootstrap_nodes": 5,
 	})
 
 	response := &registerNodeResponse{}
@@ -174,7 +174,7 @@ func TestRegisterNodeBadMajorityRule(t *testing.T) {
 		"host":                TESTHOST,
 		"public_key":          TESTPUBLICKEY,
 		"majority_rule":       3,
-		"bootstrap_nodes_num": 10,
+		"num_bootstrap_nodes": 10,
 	})
 
 	response := &registerNodeResponse{}
@@ -224,7 +224,7 @@ func TestRegisterNodeWithBootstrapNodes(t *testing.T) {
 		"host":                TESTHOST + "new",
 		"roles":               []string{"heavy_material"},
 		"majority_rule":       numNodes,
-		"bootstrap_nodes_num": numNodes,
+		"num_bootstrap_nodes": numNodes,
 	})
 
 	response := &registerNodeResponse{}

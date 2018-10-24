@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/insolar/insolar/certificate/certificate_v2"
 	"github.com/insolar/insolar/testutils"
 	"github.com/stretchr/testify/assert"
 )
@@ -90,22 +91,9 @@ type dumpAllUsersResponse struct {
 	DumpInfo []userInfo `json:"dump_info"`
 }
 
-type bootstrapNode struct {
-	PublicKey string `json:"public_key"`
-	Host      string `json:"host"`
-}
-
-type certificate struct {
-	MajorityRule   int             `json:"majority_rule"`
-	PublicKey      string          `json:"public_key"`
-	Reference      string          `json:"reference"`
-	Roles          []string        `json:"roles"`
-	BootstrapNodes []bootstrapNode `json:"bootstrap_nodes"`
-}
-
 type registerNodeResponse struct {
 	baseResponse
-	Certificate certificate `json:"certificate"`
+	Certificate certificate_v2.Certificate `json:"certificate"`
 }
 
 func createMember(t *testing.T) string {
