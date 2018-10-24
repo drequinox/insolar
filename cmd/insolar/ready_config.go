@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package ready_config
+package main
 
 import (
 	"encoding/json"
@@ -38,17 +38,4 @@ func readConfig(keysPath string) ReadyConfigParams {
 	json.Unmarshal(data, &params)
 
 	return params
-}
-
-type BootstrapNode struct {
-	PublicKey string `json:"public_key"`
-	Host      string `json:"host"`
-}
-
-type Certificate struct {
-	MajorityRule   int             `json:"majority_rule"`
-	PublicKey      string          `json:"public_key"`
-	Reference      string          `json:"reference"`
-	Roles          []string        `json:"roles"`
-	BootstrapNodes []BootstrapNode `json:"bootstrap_nodes"`
 }

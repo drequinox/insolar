@@ -26,6 +26,7 @@ import (
 
 	"github.com/insolar/insolar/api/requesters"
 	"github.com/insolar/insolar/certificate"
+	"github.com/insolar/insolar/certificate/certificate_v2"
 	"github.com/insolar/insolar/configuration"
 	"github.com/insolar/insolar/core"
 	ecdsahelper "github.com/insolar/insolar/cryptohelpers/ecdsa"
@@ -95,7 +96,8 @@ var (
 func parseInputParams() {
 	var rootCmd = &cobra.Command{}
 	rootCmd.Flags().StringVarP(&cmd, "cmd", "c", "",
-		"available commands: default_config | random_ref | version | gen_keys | gen_certificates | send_request | gen_send_configs")
+		"available commands: default_config | random_ref | version | gen_keys | "+
+			"gen_certificates | send_request | gen_send_configs | gen_ready_config")
 	rootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "be verbose (default false)")
 	rootCmd.Flags().StringVarP(&output, "output", "o", defaultStdoutPath, "output file (use - for STDOUT)")
 	rootCmd.Flags().StringVarP(&sendUrls, "url", "u", defaultURL, "api url")
@@ -239,6 +241,36 @@ func genSendConfigs(out io.Writer) {
 	writeToOutput(out, string(userConf)+"\n")
 }
 
+func genReadyConfig(out io.Writer) {
+	params := readConfig(configPath)
+	body, err := requesters.GetResponseBody(defaultURL, requesters.PostParams{
+		"query_type":          "register_node",
+		"public_key":          params.PublicKey,
+		"roles":               params.Roles,
+		"host":                params.Host,
+		"majority_rule":       params.MajorityRule,
+		"num_bootstrap_nodes": params.NumBootstrapNodes,
+	})
+	check("[ genReadyConfig ] Problem with sending register_node request", err)
+
+	cert := certificate_v2.Certificate{}
+	err = json.Unmarshal(body, &cert)
+	check("[ genReadyConfig ] Problem with unmarshaling response", err)
+
+	cfgHolder := configuration.NewHolder()
+	host := &cfgHolder.Configuration.Host
+
+	host.MajorityRule = cert.MajorityRule
+	host.BootstrapHosts = []string{}
+	for _, h := range cert.BootstrapNodes {
+		host.BootstrapHosts = append(host.BootstrapHosts, h.Host)
+	}
+
+	cfgHolder.Configuration.Node.Node.ID = cert.Reference
+	// TODO: not completed
+
+}
+
 func main() {
 	parseInputParams()
 	out, err := chooseOutput(output)
@@ -259,5 +291,7 @@ func main() {
 		sendRequest(out)
 	case "gen_send_configs":
 		genSendConfigs(out)
+	case "gen_ready_config":
+		genReadyConfig(out)
 	}
 }

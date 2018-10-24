@@ -70,7 +70,7 @@ type Params struct {
 	Amount                 uint     `json:"amount"`
 	PublicKey              string   `json:"public_key"`
 	Roles                  []string `json:"roles"`
-	NumberOfBootstrapNodes uint     `json:"bootstrap_nodes_num"`
+	NumberOfBootstrapNodes uint     `json:"num_bootstrap_nodes"`
 	MajorityRule           uint     `json:"majority_rule"`
 	Host                   string   `json:"host"`
 }
