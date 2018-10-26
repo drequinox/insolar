@@ -19,6 +19,7 @@ package certificatev2
 import (
 	"crypto/ecdsa"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 
@@ -86,7 +87,9 @@ func readPrivateKey(keysPath string, certPublicKey string) (*ecdsa.PrivateKey, e
 	}
 
 	if keys["public_key"] != certPublicKey {
-		return nil, errors.New("[ readKeys ] Public keys in certificate and keypath file are not the same")
+		msg := fmt.Sprint("Public keys in certificate and keypath file are not the same: ", "keys[\"public_key\"] = ",
+			keys["public_key"], " \n certPublicKey = ", certPublicKey)
+		return nil, errors.New("[ readKeys ] " + msg)
 	}
 
 	valid, err := isValidPublicKey(keys["public_key"], private)
