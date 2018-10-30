@@ -40,6 +40,8 @@ type IBaseLogicMessage interface {
 
 // BaseLogicMessage base of event class family, do not use it standalone
 type BaseLogicMessage struct {
+	baseMessage
+
 	Caller  core.RecordRef
 	Request core.RecordRef
 	Nonce   uint64
@@ -118,6 +120,7 @@ func (m *CallConstructor) Target() *core.RecordRef {
 }
 
 type ExecutorResults struct {
+	baseResult
 	Caller      core.RecordRef
 	RecordRef   core.RecordRef
 	CaseRecords []core.CaseRecord
@@ -145,6 +148,7 @@ func (m *ExecutorResults) GetReference() core.RecordRef {
 }
 
 type ValidateCaseBind struct {
+	BaseLogicMessage
 	Caller      core.RecordRef
 	RecordRef   core.RecordRef
 	CaseRecords []core.CaseRecord
@@ -181,6 +185,7 @@ func (m *ValidateCaseBind) GetPulse() core.Pulse {
 }
 
 type ValidationResults struct {
+	BaseLogicMessage
 	Caller           core.RecordRef
 	RecordRef        core.RecordRef
 	PassedStepsCount int

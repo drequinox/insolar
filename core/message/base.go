@@ -28,6 +28,21 @@ import (
 	"github.com/insolar/insolar/core"
 )
 
+type baseMessage struct {
+	trace string
+}
+
+func (m *baseMessage) TraceID() string {
+	return m.trace
+}
+
+type baseResult struct {
+}
+
+func (m *baseResult) TraceID() string {
+	return ""
+}
+
 // GetEmptyMessage constructs specified message
 func getEmptyMessage(mt core.MessageType) (core.Message, error) {
 	switch mt {

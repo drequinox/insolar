@@ -21,6 +21,7 @@ import (
 )
 
 type ledgerMessage struct {
+	baseMessage
 }
 
 // GetCaller implementation of Message interface.

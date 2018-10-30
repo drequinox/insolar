@@ -129,6 +129,10 @@ func (sm *SignedMessage) GetCaller() *core.RecordRef {
 	return sm.Msg.GetCaller()
 }
 
+func (sm *SignedMessage) TraceID() string {
+	return sm.Msg.TraceID()
+}
+
 func (sm *SignedMessage) GetSign() []byte {
 	return sm.Signature
 }

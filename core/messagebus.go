@@ -41,6 +41,8 @@ type Message interface {
 	TargetRole() JetRole
 	// GetCaller returns initiator of this event.
 	GetCaller() *RecordRef
+	// TraceID returns an identifier which allows you to trace message origin and causes
+	TraceID() string
 }
 
 type Signature interface {
