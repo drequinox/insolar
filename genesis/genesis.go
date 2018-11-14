@@ -28,6 +28,7 @@ import (
 	"github.com/insolar/insolar/core"
 	"github.com/insolar/insolar/core/message"
 	"github.com/insolar/insolar/instrumentation/inslogger"
+	"github.com/insolar/insolar/log"
 	"github.com/insolar/insolar/logicrunner/goplugin/goplugintestutils"
 	"github.com/pkg/errors"
 )
@@ -56,6 +57,7 @@ type Genesis struct {
 
 // Info returns json with references for info api endpoint
 func (g *Genesis) Info() ([]byte, error) {
+	log.Info("[ Genesis:Info ] HERE", g.prototypeRefs)
 	prototypes := map[string]string{}
 	for prototype, ref := range g.prototypeRefs {
 		prototypes[prototype] = ref.String()
@@ -209,7 +211,11 @@ func (g *Genesis) activateRootMember(
 func (g *Genesis) updateRootDomain(
 	ctx context.Context, am core.ArtifactManager, cb *goplugintestutils.ContractsBuilder, domainDesc core.ObjectDescriptor,
 ) error {
-	updateData, err := serializeInstance(&rootdomain.RootDomain{RootMember: *g.rootMemberRef, NodeDomainRef: *g.nodeDomainRef})
+	updateData, err := serializeInstance(&rootdomain.RootDomain{
+		RootMember:    *g.rootMemberRef,
+		NodeDomainRef: *g.nodeDomainRef,
+		PrototypeRefs: g.prototypeRefs,
+	})
 	if err != nil {
 		return errors.Wrap(err, "[ updateRootDomain ]")
 	}
@@ -288,45 +294,53 @@ func (g *Genesis) activateSmartContracts(ctx context.Context, am core.ArtifactMa
 	return nil
 }
 
+func getPrototypeRefs() map[string]*core.RecordRef {
+	return map[string]*core.RecordRef{}
+}
+
 // Start creates types and RootDomain instance
 func (g *Genesis) Start(ctx context.Context, c core.Components) error {
 	inslog := inslogger.FromContext(ctx)
-	inslog.Info("[ Bootstrapper ] Starting Bootstrap ...")
+	inslog.Info("[ Genesis ] Starting Genesis ...")
 
 	rootDomainRef, err := getRootDomainRef(ctx, c)
 	if err != nil {
-		return errors.Wrap(err, "[ Bootstrapper ] couldn't get ref of rootDomain")
+		return errors.Wrap(err, "[ Genesis ] couldn't get ref of rootDomain")
 	}
+	log.Infof("[ Genesis ] rootDomainRef: ", rootDomainRef)
 	if rootDomainRef != nil {
 		g.rootDomainRef = rootDomainRef
 
+		log.Info("[ Genesis ] HERE")
+
 		rootMemberRef, err := getRootMemberRef(ctx, c, *g.rootDomainRef)
 		if err != nil {
-			return errors.Wrap(err, "[ Bootstrapper ] couldn't get ref of rootMember")
+			return errors.Wrap(err, "[ Genesis ] couldn't get ref of rootMember")
 		}
 
 		g.rootMemberRef = rootMemberRef
-		inslog.Info("[ Bootstrapper ] RootDomain was found in ledger. Don't do bootstrap")
+		g.prototypeRefs = getPrototypeRefs()
+		inslog.Info("[ Genesis ] RootDomain was found in ledger. Don't do bootstrap")
 		return nil
 	}
 
 	g.rootPubKey, err = getRootMemberPubKey(ctx, g.rootKeysFile)
 	if err != nil {
-		return errors.Wrap(err, "[ Bootstrapper ] couldn't get root member keys")
+		return errors.Wrap(err, "[ Genesis ] couldn't get root member keys")
 	}
 
 	isLightExecutor, err := isLightExecutor(ctx, c)
 	if err != nil {
-		return errors.Wrap(err, "[ Bootstrapper ] couldn't check if node is light executor")
+		return errors.Wrap(err, "[ Genesis ] couldn't check if node is light executor")
 	}
 	if !isLightExecutor {
-		inslog.Info("[ Bootstrapper ] Node is not light executor. Don't do bootstrap")
+		inslog.Info("[ Genesis ] Node is not light executor. Don't do bootstrap")
 		return nil
 	}
 
 	_, insgocc, err := goplugintestutils.Build()
 	if err != nil {
-		return errors.Wrap(err, "[ Bootstrapper ] couldn't build insgocc")
+		return errors.Wrap(err, "[ Genesis ] couldn't build insgocc")
 	}
 
 	am := c.Ledger.GetArtifactManager()
@@ -336,12 +350,12 @@ func (g *Genesis) Start(ctx context.Context, c core.Components) error {
 
 	err = buildSmartContracts(ctx, cb)
 	if err != nil {
-		return errors.Wrap(err, "[ Bootstrapper ] couldn't build contracts")
+		return errors.Wrap(err, "[ Genesis ] couldn't build contracts")
 	}
 
 	err = g.activateSmartContracts(ctx, am, cb)
 	if err != nil {
-		return errors.Wrap(err, "[ Bootstrapper ]")
+		return errors.Wrap(err, "[ Genesis ]")
 	}
 
 	return nil

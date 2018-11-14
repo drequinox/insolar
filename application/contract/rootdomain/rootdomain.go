@@ -36,6 +36,7 @@ type RootDomain struct {
 	foundation.BaseContract
 	RootMember    core.RecordRef
 	NodeDomainRef core.RecordRef
+	PrototypeRefs map[string]*core.RecordRef
 }
 
 func makeSeed() []byte {
