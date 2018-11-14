@@ -21,6 +21,7 @@ import (
 
 	"github.com/insolar/insolar/configuration"
 	"github.com/insolar/insolar/core"
+	"github.com/insolar/insolar/instrumentation/inslogger"
 	"github.com/insolar/insolar/log"
 	"github.com/insolar/insolar/network"
 	"github.com/insolar/insolar/network/controller"
@@ -128,22 +129,22 @@ func (n *ServiceNetwork) onPulse(pulse core.Pulse) {
 	ctx := context.TODO()
 	log.Infof("Got new pulse number: %d", pulse.PulseNumber)
 	if n.pulseManager == nil {
-		log.Error("PulseManager is not initialized")
+		inslogger.FromContext(ctx).Error("[ onPulse ] PulseManager is not initialized")
 		return
 	}
 	currentPulse, err := n.pulseManager.Current(ctx)
 	if err != nil {
-		log.Error(errors.Wrap(err, "Could not get current pulse"))
+		inslogger.FromContext(ctx).Errorf("[ onPulse ] ", errors.Wrap(err, "Could not get current pulse"))
 		return
 	}
 	if (pulse.PulseNumber > currentPulse.PulseNumber) &&
 		(pulse.PulseNumber >= currentPulse.NextPulseNumber) {
 		err = n.pulseManager.Set(ctx, pulse)
 		if err != nil {
-			log.Error(errors.Wrap(err, "Failed to set pulse"))
+			inslogger.FromContext(ctx).Errorf("[ onPulse ] ", errors.Wrap(err, "Failed to set pulse"))
 			return
 		}
-		log.Infof("Set new current pulse number: %d", pulse.PulseNumber)
+		inslogger.FromContext(ctx).Infof("[ onPulse ] ", "Set new current pulse number: %d", pulse.PulseNumber)
 		go func(network *ServiceNetwork) {
 			network.controller.ResendPulseToKnownHosts(pulse)
 			if network.coordinator == nil {
@@ -151,11 +152,12 @@ func (n *ServiceNetwork) onPulse(pulse core.Pulse) {
 			}
 			err := network.coordinator.WriteActiveNodes(ctx, pulse.PulseNumber, network.nodeNetwork.GetActiveNodes())
 			if err != nil {
-				log.Warn("Writing active nodes to ledger: " + err.Error())
+				inslogger.FromContext(ctx).Errorf("[ onPulse ] ", "Writing active nodes to ledger: "+err.Error())
 			}
 		}(n)
-
 		// TODO: PLACE NEW CONSENSUS HERE
+	} else {
+		log.Infof("Incorrect pulse number. Current: %d. New: %d", currentPulse.PulseNumber, pulse.PulseNumber)
 	}
 }
 
