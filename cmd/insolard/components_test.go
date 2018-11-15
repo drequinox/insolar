@@ -54,8 +54,10 @@ func TestInitComponents(t *testing.T) {
 
 	err = cm.Init(ctx)
 	require.NoError(t, err)
-	err = cm.Start(ctx)
-	require.NoError(t, err)
+
+	// TODO: return it, when go to one role one node
+	// err = cm.Start(ctx
+	// require.NoError(t, err)
 
 	err = cm.Stop(ctx)
 	require.NoError(t, err)

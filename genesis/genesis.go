@@ -117,7 +117,8 @@ func (g *Genesis) activateRootDomain(
 		return nil, nil, errors.Wrap(err, "[ ActivateRootDomain ]")
 	}
 
-	contractID, err := g.ArtifactManager.RegisterRequest(ctx, &message.GenesisRequest{Name: "RootDomain"})
+	contractID, err := g.ArtifactManager.RegisterRequest(ctx, &message.Parcel{Msg: &message.GenesisRequest{Name: "RootDomain"}})
+
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "[ ActivateRootDomain ] Couldn't create rootdomain instance")
 	}
@@ -152,7 +153,8 @@ func (g *Genesis) activateNodeDomain(
 		return errors.Wrap(err, "[ ActivateNodeDomain ]")
 	}
 
-	contractID, err := g.ArtifactManager.RegisterRequest(ctx, &message.GenesisRequest{Name: "NodeDomain"})
+	contractID, err := g.ArtifactManager.RegisterRequest(ctx, &message.Parcel{Msg: &message.GenesisRequest{Name: "NodeDomain"}})
+
 	if err != nil {
 		return errors.Wrap(err, "[ ActivateNodeDomain ] couldn't create nodedomain instance")
 	}
@@ -188,7 +190,8 @@ func (g *Genesis) activateRootMember(
 		return errors.Wrap(err, "[ ActivateRootMember ]")
 	}
 
-	contractID, err := g.ArtifactManager.RegisterRequest(ctx, &message.GenesisRequest{Name: "RootMember"})
+	contractID, err := g.ArtifactManager.RegisterRequest(ctx, &message.Parcel{Msg: &message.GenesisRequest{Name: "RootMember"}})
+
 	if err != nil {
 		return errors.Wrap(err, "[ ActivateRootMember ] couldn't create root member instance")
 	}
@@ -245,7 +248,8 @@ func (g *Genesis) activateRootMemberWallet(
 		return errors.Wrap(err, "[ ActivateRootWallet ]")
 	}
 
-	contractID, err := g.ArtifactManager.RegisterRequest(ctx, &message.GenesisRequest{Name: "RootWallet"})
+	contractID, err := g.ArtifactManager.RegisterRequest(ctx, &message.Parcel{Msg: &message.GenesisRequest{Name: "RootWallet"}})
+
 	if err != nil {
 		return errors.Wrap(err, "[ ActivateRootWallet ] couldn't create root wallet")
 	}

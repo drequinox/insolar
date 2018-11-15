@@ -51,11 +51,7 @@ func (r *recorder) Send(ctx context.Context, msg core.Message) (core.Reply, erro
 		rep core.Reply
 		err error
 	)
-	pulse, err := r.pm.Current(ctx)
-	if err != nil {
-		return nil, err
-	}
-	parcel, err := r.CreateParcel(ctx, pulse.PulseNumber, msg, nil)
+	parcel, err := r.CreateParcel(ctx, msg)
 	id := GetMessageHash(r.scheme, parcel)
 
 	// Check if Value for this message is already stored.
@@ -70,7 +66,7 @@ func (r *recorder) Send(ctx context.Context, msg core.Message) (core.Reply, erro
 	log.Infof("UEUEUEUUEUEUEUEUE")
 
 	// Actually send message.
-	rep, err = r.SendParcel(ctx, pulse, parcel)
+	rep, err = r.SendParcel(ctx, parcel)
 	if err != nil {
 		return nil, err
 	}
