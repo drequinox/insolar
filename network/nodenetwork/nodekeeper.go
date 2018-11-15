@@ -18,7 +18,6 @@ package nodenetwork
 
 import (
 	"bytes"
-	"context"
 	"sort"
 	"strings"
 	"sync"
@@ -120,14 +119,6 @@ type nodekeeper struct {
 	unsyncList  *UnsyncList
 	listWaiters []chan *UnsyncList
 	nodeWaiters map[core.RecordRef]chan core.Node
-}
-
-func (nk *nodekeeper) Start(ctx context.Context, components core.Components) error {
-	return nil
-}
-
-func (nk *nodekeeper) Stop(ctx context.Context) error {
-	return nil
 }
 
 func (nk *nodekeeper) GetOrigin() core.Node {
@@ -334,6 +325,8 @@ func (nk *nodekeeper) addActiveNode(node core.Node) {
 		log.Infof("Added origin node %s to active list", nk.origin.ID())
 	}
 	nk.active[node.ID()] = node
+
+	log.Infof("[ addActiveNode ] ADDING: " + node.ID().String())
 
 	list, ok := nk.indexNode[node.Role()]
 	if !ok {

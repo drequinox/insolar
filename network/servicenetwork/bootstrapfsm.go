@@ -51,6 +51,8 @@ func (bFSM *bootstrapFSM) hasBootstrapConsensus(ctx context.Context) (bool, erro
 	case consensusOk:
 		return true, nil
 	default:
-		return false, errors.New("[ hasBootstrapConsensus ] Bad state: " + strconv.Itoa(bFSM.current))
+		return false, errors.New("[ hasBootstrapConsensus ] Bad state: " + strconv.Itoa(int(bFSM.current)))
 	}
+
+	return false, nil
 }

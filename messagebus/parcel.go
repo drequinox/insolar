@@ -64,6 +64,7 @@ func (pf *parcelFactory) Create(
 		Signature:     signature.Bytes(),
 		LogTraceID:    inslogger.TraceID(ctx),
 		TraceSpanData: instracer.MustSerialize(ctx),
+		Sender:        sender,
 	}, nil
 }
 

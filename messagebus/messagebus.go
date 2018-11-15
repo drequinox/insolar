@@ -20,9 +20,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/gob"
+	"fmt"
 	"io"
+	"runtime/debug"
 	"time"
 
+	"github.com/insolar/insolar/log"
 	"github.com/pkg/errors"
 
 	"github.com/insolar/insolar/configuration"
@@ -91,8 +94,10 @@ func (mb *MessageBus) NewRecorder(ctx context.Context) (core.MessageBus, error) 
 }
 
 // Start initializes message bus
-func (mb *MessageBus) Start(ctx context.Context) error {
+func (mb *MessageBus) Init(ctx context.Context) error {
+	log.Error("JFJFJFJJFJFJFJ")
 	mb.Service.RemoteProcedureRegister(deliverRPCMethodName, mb.deliver)
+	log.Error("PXPXPXPXPXPPXPXPX")
 
 	return nil
 }
@@ -137,6 +142,9 @@ func (mb *MessageBus) Send(ctx context.Context, msg core.Message) (core.Reply, e
 		return nil, err
 	}
 
+	log.Infof("BSBSBSBSBBSBS")
+	log.Infof("STACK\n", string(debug.Stack()))
+
 	return mb.SendParcel(ctx, pulse, parcel)
 }
 
@@ -173,6 +181,8 @@ func (mb *MessageBus) SendParcel(ctx context.Context, pulse *core.Pulse, msg cor
 	if nodes[0].Equal(mb.Service.GetNodeID()) {
 		return mb.doDeliver(msg.Context(context.Background()), msg)
 	}
+
+	log.Infof("MQMQMQMQMMQMQMQ")
 
 	res, err := mb.Service.SendMessage(nodes[0], deliverRPCMethodName, msg)
 	if err != nil {
@@ -218,6 +228,11 @@ func (mb *MessageBus) deliver(args [][]byte) (result []byte, err error) {
 	}
 
 	sender := parcel.GetSender()
+	nodes := mb.ActiveNodes.GetActiveNodes()
+	for _, n := range nodes {
+		fmt.Println("++++++>>>>>>>>>>>>>>>>>>>", n.ID().String())
+	}
+	fmt.Println("++++++>>>>>>>>>>>>>>>>>>>", parcel.GetSender().String())
 	senderKey := mb.ActiveNodes.GetActiveNode(sender).PublicKey()
 	if mb.signmessages {
 		err := mb.ParcelFactory.Validate(senderKey, parcel)

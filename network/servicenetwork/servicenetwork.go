@@ -30,16 +30,21 @@ import (
 	"github.com/pkg/errors"
 )
 
+type OldComponentManager interface {
+	GetAll() core.Components
+}
+
 // ServiceNetwork is facade for network.
 type ServiceNetwork struct {
 	hostNetwork  network.HostNetwork
 	controller   network.Controller
 	routingTable network.RoutingTable
 
-	certificate  core.Certificate
-	nodeNetwork  core.NodeNetwork
-	pulseManager core.PulseManager
-	coordinator  core.NetworkCoordinator
+	Certificate         core.Certificate        `inject:""`
+	NodeNetwork         core.NodeNetwork        `inject:""`
+	PulseManager        core.PulseManager       `inject:""`
+	Coordinator         core.NetworkCoordinator `inject:""`
+	OldComponentManager OldComponentManager     `inject:""`
 }
 
 // NewServiceNetwork returns a new ServiceNetwork.
@@ -62,7 +67,7 @@ func (n *ServiceNetwork) GetAddress() string {
 
 // GetNodeID returns current node id.
 func (n *ServiceNetwork) GetNodeID() core.RecordRef {
-	return n.nodeNetwork.GetOrigin().ID()
+	return n.NodeNetwork.GetOrigin().ID()
 }
 
 // SendParcel sends a message from MessageBus.
@@ -80,9 +85,10 @@ func (n *ServiceNetwork) RemoteProcedureRegister(name string, method core.Remote
 	n.controller.RemoteProcedureRegister(name, method)
 }
 
-// Start implements core.Component
-func (n *ServiceNetwork) Start(ctx context.Context, components core.Components) error {
-	n.inject(components)
+// Init implements core.Component
+func (n *ServiceNetwork) Init(ctx context.Context) error {
+	components := n.OldComponentManager.GetAll() // TODO: REMOVE HACK
+
 	n.routingTable.Start(components)
 	log.Infoln("Network starts listening")
 	n.hostNetwork.Start()
@@ -105,13 +111,6 @@ func (n *ServiceNetwork) Start(ctx context.Context, components core.Components) 
 	return nil
 }
 
-func (n *ServiceNetwork) inject(components core.Components) {
-	n.certificate = components.Certificate
-	n.nodeNetwork = components.NodeNetwork
-	n.pulseManager = components.Ledger.GetPulseManager()
-	n.coordinator = components.NetworkCoordinator
-}
-
 // Stop implements core.Component
 func (n *ServiceNetwork) Stop(ctx context.Context) error {
 	n.hostNetwork.Stop()
@@ -128,18 +127,15 @@ func (n *ServiceNetwork) bootstrap() {
 func (n *ServiceNetwork) onPulse(pulse core.Pulse) {
 	ctx := context.TODO()
 	log.Infof("Got new pulse number: %d", pulse.PulseNumber)
-	if n.pulseManager == nil {
-		inslogger.FromContext(ctx).Error("[ onPulse ] PulseManager is not initialized")
-		return
-	}
-	currentPulse, err := n.pulseManager.Current(ctx)
+
+	currentPulse, err := n.PulseManager.Current(ctx)
 	if err != nil {
 		inslogger.FromContext(ctx).Errorf("[ onPulse ] ", errors.Wrap(err, "Could not get current pulse"))
 		return
 	}
 	if (pulse.PulseNumber > currentPulse.PulseNumber) &&
 		(pulse.PulseNumber >= currentPulse.NextPulseNumber) {
-		err = n.pulseManager.Set(ctx, pulse)
+		err = n.PulseManager.Set(ctx, pulse)
 		if err != nil {
 			inslogger.FromContext(ctx).Errorf("[ onPulse ] ", errors.Wrap(err, "Failed to set pulse"))
 			return
@@ -147,10 +143,10 @@ func (n *ServiceNetwork) onPulse(pulse core.Pulse) {
 		inslogger.FromContext(ctx).Infof("[ onPulse ] ", "Set new current pulse number: %d", pulse.PulseNumber)
 		go func(network *ServiceNetwork) {
 			network.controller.ResendPulseToKnownHosts(pulse)
-			if network.coordinator == nil {
+			if network.Coordinator == nil {
 				return
 			}
-			err := network.coordinator.WriteActiveNodes(ctx, pulse.PulseNumber, network.nodeNetwork.GetActiveNodes())
+			err := network.Coordinator.WriteActiveNodes(ctx, pulse.PulseNumber, network.NodeNetwork.GetActiveNodes())
 			if err != nil {
 				inslogger.FromContext(ctx).Errorf("[ onPulse ] ", "Writing active nodes to ledger: "+err.Error())
 			}
