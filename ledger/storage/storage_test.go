@@ -176,7 +176,7 @@ func TestDB_AddPulse(t *testing.T) {
 	assert.Equal(t, core.PulseNumber(42), latestPulse)
 	pulse, err := db.GetPulse(ctx, latestPulse)
 	assert.NoError(t, err)
-	assert.Equal(t, record.PulseRecord{PrevPulse: core.FirstPulseNumber, Entropy: core.Entropy{1, 2, 3}}, *pulse)
+	assert.Equal(t, storage.Pulse{Prev: core.FirstPulseNumber, Pulse: core.Pulse{Entropy: core.Entropy{1, 2, 3}, PulseNumber: 42}}, *pulse)
 }
 
 func TestDB_SetLocalData(t *testing.T) {

@@ -17,8 +17,10 @@
 package core
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 
 	"github.com/jbenet/go-base58"
 )
@@ -65,6 +67,14 @@ func (id *RecordID) Equal(other *RecordID) bool {
 		return false
 	}
 	return *id == *other
+}
+
+// MarshalJSON checks if reference points to the same record.
+func (id *RecordID) MarshalJSON() ([]byte, error) {
+	if id == nil {
+		return json.Marshal(nil)
+	}
+	return json.Marshal(base58.Encode(id[:]))
 }
 
 // RecordRef is a unified record reference.
@@ -132,4 +142,20 @@ func NewRefFromBase58(str string) RecordRef {
 	var ref RecordRef
 	copy(ref[:], decoded)
 	return ref
+}
+
+// MarshalJSON checks if reference points to the same record.
+func (ref *RecordRef) MarshalJSON() ([]byte, error) {
+	if ref == nil {
+		return json.Marshal(nil)
+	}
+	rec, err := ref.Record().MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	domain, err := ref.Domain().MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(bytes.Join([][]byte{rec, domain}, nil))
 }
