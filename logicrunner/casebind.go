@@ -135,6 +135,9 @@ func (lr *LogicRunner) Validate(ctx context.Context, ref Ref, p core.Pulse, cb c
 }
 
 func (lr *LogicRunner) ValidateCaseBind(ctx context.Context, inmsg core.Parcel) (core.Reply, error) {
+	if inmsg.GetSender().Equal(lr.Network.GetNodeID()) {
+		return &reply.OK{}, nil
+	}
 	msg, ok := inmsg.Message().(*message.ValidateCaseBind)
 	if !ok {
 		return nil, errors.New("Execute( ! message.ValidateCaseBindInterface )")
