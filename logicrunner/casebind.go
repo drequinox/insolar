@@ -173,12 +173,31 @@ func (lr *LogicRunner) ProcessValidationResults(ctx context.Context, inmsg core.
 
 func (lr *LogicRunner) ExecutorResults(ctx context.Context, inmsg core.Parcel) (core.Reply, error) {
 	msg, ok := inmsg.Message().(*message.ExecutorResults)
+	if inmsg.GetSender().Equal(lr.Network.GetNodeID()) {
+		return lr.justApprove(ctx, inmsg, msg)
+	}
+
 	if !ok {
 		return nil, errors.Errorf("ProcessValidationResults got argument typed %t", inmsg)
 	}
 	c, _ := lr.GetConsensus(ctx, msg.RecordRef)
 	c.AddExecutor(ctx, inmsg, msg)
 	return &reply.OK{}, nil
+}
+
+func (lr *LogicRunner) justApprove(ctx context.Context, inmsg core.Parcel, msg *message.ExecutorResults) (core.Reply, error) {
+	lastReq := len(msg.CaseBind.Requests)
+	if lastReq == 0 {
+		return &reply.OK{}, errors.New("Got an empty validation request")
+	}
+	req, ok := msg.CaseBind.Requests[lastReq-1].Request.(message.IBaseLogicMessage)
+	if !ok {
+		return &reply.Error{}, errors.New("Consensus not with IBaseLogicMessage")
+	}
+	err := lr.ArtifactManager.RegisterValidation(
+		ctx, req.GetReference(), *req.GetRequest().Record(), true, []core.Message{inmsg},
+	)
+	return &reply.OK{}, err
 }
 
 // ValidationBehaviour is a special object that responsible for validation behavior of other methods.
