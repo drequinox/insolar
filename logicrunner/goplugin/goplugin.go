@@ -19,6 +19,7 @@ package goplugin
 
 import (
 	"context"
+	"math/rand"
 	"net/rpc"
 	"os/exec"
 	"sync"
@@ -32,6 +33,8 @@ import (
 	"github.com/insolar/insolar/logicrunner/goplugin/rpctypes"
 	"github.com/pkg/errors"
 )
+
+const connsNum = 8
 
 // Options of the GoPlugin
 type Options struct {
@@ -55,7 +58,7 @@ type GoPlugin struct {
 	runner          *exec.Cmd
 
 	clientMutex sync.Mutex
-	client      *rpc.Client
+	client      [connsNum]*rpc.Client
 }
 
 // NewGoPlugin returns a new started GoPlugin
@@ -81,8 +84,10 @@ func (gp *GoPlugin) Downstream(ctx context.Context) (*rpc.Client, error) {
 	gp.clientMutex.Lock()
 	defer gp.clientMutex.Unlock()
 
-	if gp.client != nil {
-		return gp.client, nil
+	i := rand.Intn(connsNum)
+
+	if gp.client[i] != nil {
+		return gp.client[i], nil
 	}
 
 	client, err := rpc.Dial(gp.Cfg.GoPlugin.RunnerProtocol, gp.Cfg.GoPlugin.RunnerListen)
@@ -93,16 +98,20 @@ func (gp *GoPlugin) Downstream(ctx context.Context) (*rpc.Client, error) {
 		)
 	}
 
-	gp.client = client
-	return gp.client, nil
+	gp.client[i] = client
+	return gp.client[i], nil
 }
 
 func (gp *GoPlugin) CloseDownstream() {
 	gp.clientMutex.Lock()
 	defer gp.clientMutex.Unlock()
 
-	gp.client.Close()
-	gp.client = nil
+	for i, client := range gp.client {
+		if client != nil {
+			client.Close()
+			gp.client[i] = nil
+		}
+	}
 }
 
 func (gp *GoPlugin) callClientWithReconnect(ctx context.Context, method string, req interface{}, res interface{}) error {

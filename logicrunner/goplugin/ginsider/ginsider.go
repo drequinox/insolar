@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/rpc"
 	"os"
 	"path/filepath"
@@ -49,6 +50,8 @@ type pluginRec struct {
 	plugin *plugin.Plugin
 }
 
+const connsNum = 8
+
 // GoInsider is an RPC interface to run code of plugins
 type GoInsider struct {
 	dir              string
@@ -56,7 +59,7 @@ type GoInsider struct {
 	upstreamAddress  string
 
 	upstreamMutex  sync.Mutex // lock UpstreamClient change
-	UpstreamClient *rpc.Client
+	UpstreamClient [connsNum]*rpc.Client
 
 	plugins      map[core.RecordRef]*pluginRec
 	pluginsMutex sync.Mutex
@@ -189,8 +192,11 @@ func (t *RPC) CallConstructor(args rpctypes.DownCallConstructorReq, reply *rpcty
 func (gi *GoInsider) Upstream() (*rpc.Client, error) {
 	gi.upstreamMutex.Lock()
 	defer gi.upstreamMutex.Unlock()
-	if gi.UpstreamClient != nil {
-		return gi.UpstreamClient, nil
+
+	i := rand.Intn(connsNum)
+
+	if gi.UpstreamClient[i] != nil {
+		return gi.UpstreamClient[i], nil
 	}
 
 	client, err := rpc.Dial(gi.upstreamProtocol, gi.upstreamAddress)
@@ -199,8 +205,8 @@ func (gi *GoInsider) Upstream() (*rpc.Client, error) {
 		os.Exit(0)
 	}
 
-	gi.UpstreamClient = client
-	return gi.UpstreamClient, nil
+	gi.UpstreamClient[i] = client
+	return gi.UpstreamClient[i], nil
 }
 
 // ObtainCode returns path on the file system to the plugin, fetches it from a provider
