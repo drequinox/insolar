@@ -33,11 +33,11 @@ import (
 )
 
 type CaseRequest struct {
-	Parcel     core.Parcel
-	Request    core.RecordRef
-	MessageBus core.MessageBus
-	Reply      core.Reply
-	Error      string
+	Parcel     core.Parcel     `codec:"a"`
+	Request    core.RecordRef  `codec:"b"`
+	MessageBus core.MessageBus `codec:"c"`
+	Reply      core.Reply      `codec:"d"`
+	Error      string          `codec:"e"`
 }
 
 // CaseBinder is a whole result of executor efforts on every object it seen on this pulse

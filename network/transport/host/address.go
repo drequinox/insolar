@@ -24,7 +24,7 @@ import (
 
 // Address is host's real network address.
 type Address struct {
-	net.UDPAddr
+	net.UDPAddr `codec:"a"`
 }
 
 // NewAddress is constructor.

@@ -26,11 +26,11 @@ import (
 // Host is the over-the-wire representation of a host.
 type Host struct {
 	// NodeID is unique identifier of the node
-	NodeID core.RecordRef
+	NodeID core.RecordRef `codec:"a"`
 	// ShortID is shortened unique identifier of the node inside the globe
-	ShortID core.ShortNodeID
+	ShortID core.ShortNodeID `codec:"b"`
 	// Address is IP and port.
-	Address *Address
+	Address *Address `codec:"c"`
 }
 
 // NewHost creates a new Host with specified physical address.

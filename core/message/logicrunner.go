@@ -43,11 +43,11 @@ type IBaseLogicMessage interface {
 
 // BaseLogicMessage base of event class family, do not use it standalone
 type BaseLogicMessage struct {
-	Caller          core.RecordRef
-	Request         core.RecordRef
-	CallerPrototype core.RecordRef
-	Nonce           uint64
-	Sequence        uint64
+	Caller          core.RecordRef `codec:"a"`
+	Request         core.RecordRef `codec:"b"`
+	CallerPrototype core.RecordRef `codec:"c"`
+	Nonce           uint64         `codec:"d"`
+	Sequence        uint64         `codec:"e"`
 }
 
 func (m *BaseLogicMessage) GetBaseLogicMessage() *BaseLogicMessage {
@@ -89,11 +89,11 @@ func (m *BaseLogicMessage) GetRequest() core.RecordRef {
 
 // ReturnResults - push results of methods
 type ReturnResults struct {
-	Target   core.RecordRef
-	Caller   core.RecordRef
-	Sequence uint64
-	Reply    core.Reply
-	Error    string
+	Target   core.RecordRef `codec:"a"`
+	Caller   core.RecordRef `codec:"b"`
+	Sequence uint64         `codec:"c"`
+	Reply    core.Reply     `codec:"d"`
+	Error    string         `codec:"e"`
 }
 
 func (rr *ReturnResults) Type() core.MessageType {
@@ -119,11 +119,11 @@ func (rr *ReturnResults) AllowedSenderObjectAndRole() (*core.RecordRef, core.Dyn
 // CallMethod - Simply call method and return result
 type CallMethod struct {
 	BaseLogicMessage
-	ReturnMode     MethodReturnMode
-	ObjectRef      core.RecordRef
-	Method         string
-	Arguments      core.Arguments
-	ProxyPrototype core.RecordRef
+	ReturnMode     MethodReturnMode `codec:"a"`
+	ObjectRef      core.RecordRef   `codec:"b"`
+	Method         string           `codec:"c"`
+	Arguments      core.Arguments   `codec:"d"`
+	ProxyPrototype core.RecordRef   `codec:"e"`
 }
 
 // AllowedSenderObjectAndRole implements interface method
@@ -164,12 +164,12 @@ const (
 // CallConstructor is a message for calling constructor and obtain its reply
 type CallConstructor struct {
 	BaseLogicMessage
-	ParentRef    core.RecordRef
-	SaveAs       SaveAs
-	PrototypeRef core.RecordRef
-	Name         string
-	Arguments    core.Arguments
-	PulseNum     core.PulseNumber
+	ParentRef    core.RecordRef   `codec:"a"`
+	SaveAs       SaveAs           `codec:"b"`
+	PrototypeRef core.RecordRef   `codec:"c"`
+	Name         string           `codec:"d"`
+	Arguments    core.Arguments   `codec:"e"`
+	PulseNum     core.PulseNumber `codec:"f"`
 }
 
 //
@@ -205,11 +205,11 @@ func (cc *CallConstructor) Type() core.MessageType {
 
 // TODO rename to executorObjectResult (results?)
 type ExecutorResults struct {
-	Caller    core.RecordRef
-	RecordRef core.RecordRef
-	Requests  []CaseBindRequest
-	Queue     []ExecutionQueueElement
-	Pending   bool
+	Caller    core.RecordRef          `codec:"a"`
+	RecordRef core.RecordRef          `codec:"b"`
+	Requests  []CaseBindRequest       `codec:"c"`
+	Queue     []ExecutionQueueElement `codec:"d"`
+	Pending   bool                    `codec:"e"`
 }
 
 type ExecutionQueueElement struct {

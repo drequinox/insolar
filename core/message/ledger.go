@@ -34,8 +34,8 @@ func (ledgerMessage) GetCaller() *core.RecordRef {
 type SetRecord struct {
 	ledgerMessage
 
-	Record    []byte
-	TargetRef core.RecordRef
+	Record    []byte         `codec:"a"`
+	TargetRef core.RecordRef `codec:"b"`
 }
 
 // AllowedSenderObjectAndRole implements interface method

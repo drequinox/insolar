@@ -25,18 +25,18 @@ import (
 )
 
 type Node struct {
-	Reference string
-	Role      string
+	Reference string `codec:"a"`
+	Role      string `codec:"b"`
 }
 
 // StatusReply is reply for Status service requests.
 type StatusReply struct {
-	NetworkState   string
-	Origin         Node
-	ActiveListSize int
-	ActiveList     []Node
-	PulseNumber    uint32
-	Entropy        []byte
+	NetworkState   string `codec:"a"`
+	Origin         Node   `codec:"b"`
+	ActiveListSize int    `codec:"c"`
+	ActiveList     []Node `codec:"d"`
+	PulseNumber    uint32 `codec:"e"`
+	Entropy        []byte `codec:"f"`
 }
 
 // StatusService is a service that provides API for getting status of node.

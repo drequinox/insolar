@@ -33,13 +33,13 @@ type ParcelFactory interface {
 
 // Parcel is a message signed by senders private key.
 type Parcel struct {
-	Sender        core.RecordRef
-	Msg           core.Message
-	Signature     []byte
-	LogTraceID    string
-	TraceSpanData []byte
-	Token         core.DelegationToken
-	PulseNumber   core.PulseNumber
+	Sender        core.RecordRef       `codec:"a"`
+	Msg           core.Message         `codec:"b"`
+	Signature     []byte               `codec:"c"`
+	LogTraceID    string               `codec:"d"`
+	TraceSpanData []byte               `codec:"e"`
+	Token         core.DelegationToken `codec:"f"`
+	PulseNumber   core.PulseNumber     `codec:"g"`
 }
 
 // AllowedSenderObjectAndRole implements interface method
