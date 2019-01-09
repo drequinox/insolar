@@ -33,15 +33,15 @@ type RequestID uint64
 
 // Packet is DHT packet object.
 type Packet struct {
-	Sender        *host.Host
-	Receiver      *host.Host
-	Type          types.PacketType
-	RequestID     RequestID
-	RemoteAddress string
+	Sender        *host.Host       `codec:"a"`
+	Receiver      *host.Host       `codec:"b"`
+	Type          types.PacketType `codec:"c"`
+	RequestID     RequestID        `codec:"d"`
+	RemoteAddress string           `codec:"e"`
 
-	Data       interface{}
-	Error      error
-	IsResponse bool
+	Data       interface{} `codec:"f"`
+	Error      error       `codec:"g"`
+	IsResponse bool        `codec:"h"`
 }
 
 // SerializePacket converts packet to byte slice.
