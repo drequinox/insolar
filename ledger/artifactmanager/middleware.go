@@ -230,7 +230,7 @@ func (m *middleware) fetchJet(
 		return nil, false, err
 	}
 
-	nodes, err := m.db.GetActiveNodesByRole(prevPulse.Pulse.PulseNumber, core.StaticRoleLightMaterial)
+	nodes, err := m.db.GetActiveNodesByRole(ctx, prevPulse.Pulse.PulseNumber, core.StaticRoleLightMaterial)
 	if err != nil {
 		return nil, false, err
 	}
@@ -249,7 +249,7 @@ func (m *middleware) fetchJet(
 			"This shouldn't happen. We're solo active light material and have no active jet tree",
 		)
 
-		return nil, false, errors.New("impossible situation")
+		return nil, false, errors.Errorf("impossible situation 1 %d", prevPulse.Pulse.PulseNumber)
 	}
 
 	wg := sync.WaitGroup{}
@@ -306,5 +306,5 @@ func (m *middleware) fetchJet(
 	inslogger.FromContext(ctx).Error(
 		"My guess is: ", jetID.JetIDString(),
 	)
-	return nil, false, errors.New("impossible situation")
+	return nil, false, errors.Errorf("impossible situation 2 %d", prevPulse.Pulse.PulseNumber)
 }

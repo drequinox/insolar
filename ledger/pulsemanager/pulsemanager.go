@@ -587,7 +587,7 @@ func (m *PulseManager) Set(ctx context.Context, newPulse core.Pulse, persist boo
 			m.PulseStorage.Unlock()
 			return errors.Wrap(err, "call of AddPulse failed")
 		}
-		err = m.db.SetActiveNodes(newPulse.PulseNumber, m.NodeNet.GetActiveNodes())
+		err = m.db.SetActiveNodes(ctx, newPulse.PulseNumber, m.NodeNet.GetActiveNodes())
 		if err != nil {
 			m.GIL.Release(ctx)
 			m.PulseStorage.Unlock()
@@ -704,7 +704,7 @@ func (m *PulseManager) AddPulseToSyncClients(ctx context.Context, pn core.PulseN
 // Start starts pulse manager, spawns replication goroutine under a hood.
 func (m *PulseManager) Start(ctx context.Context) error {
 	// FIXME: @andreyromancev. 21.12.18. Find a proper place for me. Somewhere at the genesis.
-	err := m.db.SetActiveNodes(core.FirstPulseNumber, m.NodeNet.GetActiveNodes())
+	err := m.db.SetActiveNodes(ctx, core.FirstPulseNumber, m.NodeNet.GetActiveNodes())
 	if err != nil && err != storage.ErrOverride {
 		return err
 	}

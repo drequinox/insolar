@@ -50,7 +50,7 @@ func TestJetCoordinator_QueryRole(t *testing.T) {
 		nodes = append(nodes, storage.Node{FID: ref, FRole: core.StaticRoleLightMaterial})
 		nodeRefs = append(nodeRefs, ref)
 	}
-	err = db.SetActiveNodes(0, nodes)
+	err = db.SetActiveNodes(ctx, 0, nodes)
 	require.NoError(t, err)
 
 	objID := core.NewRecordID(0, []byte{1, 42, 123})

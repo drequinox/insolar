@@ -42,6 +42,7 @@ const (
 	scopeIDMessage  byte = 6
 	scopeIDBlob     byte = 7
 	scopeIDLocal    byte = 8
+	scopeIDNodeList byte = 9
 
 	sysGenesis                byte = 1
 	sysLatestPulse            byte = 2
@@ -527,7 +528,7 @@ func (db *DB) IterateIndexIDs(
 }
 
 // SetActiveNodes saves active nodes for pulse in memory.
-func (db *DB) SetActiveNodes(pulse core.PulseNumber, nodes []core.Node) error {
+func (db *DB) SetActiveNodes(ctx context.Context, pulse core.PulseNumber, nodes []core.Node) error {
 	db.nodeHistoryLock.Lock()
 	defer db.nodeHistoryLock.Unlock()
 
@@ -536,12 +537,18 @@ func (db *DB) SetActiveNodes(pulse core.PulseNumber, nodes []core.Node) error {
 	}
 
 	db.nodeHistory[pulse] = []Node{}
+
 	for _, n := range nodes {
 		db.nodeHistory[pulse] = append(db.nodeHistory[pulse], Node{
 			FID:   n.ID(),
 			FRole: n.Role(),
 		})
 	}
+	data, err := SerializeNodes(db.nodeHistory[pulse])
+	if err != nil {
+		return err
+	}
+	db.set(ctx, bytes.Join([][]byte{{scopeIDNodeList}, pulse.Bytes()}, nil), data)
 
 	return nil
 }
@@ -564,13 +571,21 @@ func (db *DB) GetActiveNodes(pulse core.PulseNumber) ([]core.Node, error) {
 }
 
 // GetActiveNodesByRole return active nodes for specified pulse and role.
-func (db *DB) GetActiveNodesByRole(pulse core.PulseNumber, role core.StaticRole) ([]core.Node, error) {
+func (db *DB) GetActiveNodesByRole(ctx context.Context, pulse core.PulseNumber, role core.StaticRole) ([]core.Node, error) {
 	db.nodeHistoryLock.RLock()
 	defer db.nodeHistoryLock.RUnlock()
 
+	var nodes []Node
 	nodes, ok := db.nodeHistory[pulse]
 	if !ok {
-		return nil, errors.New("no nodes for this pulse")
+		data, err := db.get(ctx, bytes.Join([][]byte{{scopeIDNodeList}, pulse.Bytes()}, nil))
+		if err != nil {
+			return nil, errors.Wrap(err, "no nodes for this pulse")
+		}
+		nodes, err = DeserializeNodes(data)
+		if err != nil {
+			return nil, errors.Wrap(err, "no nodes for this pulse")
+		}
 	}
 	var inRole []core.Node
 	for _, n := range nodes {
