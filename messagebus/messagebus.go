@@ -22,6 +22,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"io"
+	"strings"
 	"sync"
 	"time"
 
@@ -158,6 +159,23 @@ func (mb *MessageBus) Send(ctx context.Context, msg core.Message, ops *core.Mess
 	)
 	rep, err := mb.SendParcel(ctx, parcel, *currentPulse, ops)
 	span.End()
+
+	if err != nil && strings.Contains(err.Error(), "checkPulse.fromPast") {
+		fmt.Printf("BADPULSE: %d, retrying Send\n", currentPulse.PulseNumber)
+		ctx = inslogger.ContextWithTrace(context.Background(), utils.TraceID(ctx))
+		newPulse, err := mb.PulseStorage.Current(ctx)
+		if err != nil {
+			return nil, err
+		}
+		mb.NextPulseMessagePoolLock.RLock()
+		if newPulse.PulseNumber == currentPulse.PulseNumber {
+			<-mb.NextPulseMessagePoolChan
+			ctx = inslogger.ContextWithTrace(context.Background(), utils.TraceID(ctx))
+		}
+		mb.NextPulseMessagePoolLock.RUnlock()
+		return mb.Send(ctx, msg, ops)
+	}
+
 	return rep, err
 }
 
@@ -330,28 +348,28 @@ func (mb *MessageBus) checkPulse(ctx context.Context, parcel core.Parcel, locked
 
 	if parcel.Pulse() > pulse.PulseNumber {
 		// We waited for next pulse but parcel is still from future. Return error.
-		inslogger.FromContext(ctx).Errorf("[ checkPulse ] After all checks, message pulse is still bigger then current (parcel: %d, current: %d)", parcel.Pulse(), pulse.PulseNumber)
-		return fmt.Errorf("[ checkPulse ] Incorrect message pulse (parcel: %d, current: %d)", parcel.Pulse(), pulse.PulseNumber)
+		inslogger.FromContext(ctx).Errorf("[ checkPulse.fromFuture ] After all checks, message pulse is still bigger then current (parcel: %d, current: %d)", parcel.Pulse(), pulse.PulseNumber)
+		return fmt.Errorf("[ checkPulse.fromFuture ] Incorrect message pulse (parcel: %d, current: %d)", parcel.Pulse(), pulse.PulseNumber)
 	}
 	if parcel.Pulse() < pulse.PulseNumber {
 		// Parcel is from past. Return error for some messages, allow for others.
-		switch parcel.Message().(type) {
-		case
-			*message.GetObject,
-			*message.GetDelegate,
-			*message.GetChildren,
-			*message.SetRecord,
-			*message.UpdateObject,
-			*message.RegisterChild,
-			*message.SetBlob,
-			*message.GetObjectIndex,
-			*message.GetPendingRequests,
-			*message.ValidateRecord,
-			*message.CallConstructor,
-			*message.CallMethod:
-			inslogger.FromContext(ctx).Errorf("[ checkPulse ] Incorrect message pulse (parcel: %d, current: %d)", parcel.Pulse(), pulse.PulseNumber)
-			return fmt.Errorf("[ checkPulse ] Incorrect message pulse (parcel: %d, current: %d)", parcel.Pulse(), pulse.PulseNumber)
-		}
+		// switch parcel.Message().(type) {
+		// case
+		// 	*message.GetObject,
+		// 	*message.GetDelegate,
+		// 	*message.GetChildren,
+		// 	*message.SetRecord,
+		// 	*message.UpdateObject,
+		// 	*message.RegisterChild,
+		// 	*message.SetBlob,
+		// 	*message.GetObjectIndex,
+		// 	*message.GetPendingRequests,
+		// 	*message.ValidateRecord,
+		// 	*message.CallConstructor,
+		// 	*message.CallMethod:
+		inslogger.FromContext(ctx).Errorf("[ checkPulse.fromPast ] Incorrect message pulse (parcel: %d, current: %d)", parcel.Pulse(), pulse.PulseNumber)
+		return fmt.Errorf("[ checkPulse.fromPast ] Incorrect message pulse (parcel: %d, current: %d)", parcel.Pulse(), pulse.PulseNumber)
+		// }
 	}
 
 	return nil
