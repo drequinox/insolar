@@ -163,16 +163,27 @@ func (mb *MessageBus) Send(ctx context.Context, msg core.Message, ops *core.Mess
 	if err != nil && strings.Contains(err.Error(), "checkPulse.fromPast") {
 		fmt.Printf("BADPULSE: %d, retrying Send\n", currentPulse.PulseNumber)
 		ctx = inslogger.ContextWithTrace(context.Background(), utils.TraceID(ctx))
+
+		mb.NextPulseMessagePoolLock.RLock()
 		newPulse, err := mb.PulseStorage.Current(ctx)
+		nmpc := mb.NextPulseMessagePoolChan
+		mb.NextPulseMessagePoolLock.RUnlock()
+
 		if err != nil {
 			return nil, err
 		}
-		mb.NextPulseMessagePoolLock.RLock()
+
 		if newPulse.PulseNumber == currentPulse.PulseNumber {
-			<-mb.NextPulseMessagePoolChan
+			ctx = inslogger.ContextWithTrace(context.Background(), utils.TraceID(ctx))
+			newPulse, err := mb.PulseStorage.Current(ctx)
+			if err != nil {
+				return nil, err
+			}
+			if newPulse.PulseNumber == currentPulse.PulseNumber {
+				<-nmpc
+			}
 			ctx = inslogger.ContextWithTrace(context.Background(), utils.TraceID(ctx))
 		}
-		mb.NextPulseMessagePoolLock.RUnlock()
 		return mb.Send(ctx, msg, ops)
 	}
 
